@@ -1,4 +1,4 @@
-from flask import Flask, send_file, request
+from flask import Flask, request, send_file
 from pytube import YouTube
 from flask_cors import CORS
 import os
@@ -7,28 +7,27 @@ app = Flask(__name__)
 CORS(app)
 
 
-def download_video(video_id):
-    file_path = f"music/{video_id}.mp3"
-
-    if os.path.exists(file_path):
-        # File already exists, no need to download again
-        return file_path
-    else:
-        yt = YouTube(f'https://www.youtube.com/watch?v={video_id}')
-        audio_stream = yt.streams.filter(only_audio=True).first().download(
-            output_path="music/", filename=f"{video_id}.mp3")
-        return file_path
-
-
 @app.route('/')
 def stream_audio():
     video_id = request.args.get('url')
+    file_path = f"music/{video_id}.mp3"
+
     if video_id:
-        audio_file_path = download_video(video_id)
-        return send_file(audio_file_path, as_attachment=False)
+        if os.path.exists(file_path):
+            # File already exists, no need to download again
+            return send_file(file_path)
+        else:
+            try:
+                yt = YouTube("https://www.youtube.com/watch?v="+str(video_id))
+                audio_stream = yt.streams.filter(only_audio=True).first()
+                audio_stream.download(
+                    output_path="music/", filename=video_id+".mp3")
+                return send_file(file_path, as_attachment=False)
+            except Exception as e:
+                return str(e)
     else:
-        return "Error: Missing 'id' parameter in the URL", 400
+        return "not found"
 
 
-if __name__ == "__main__":
-    app.run(debug=False)
+if __name__ == '__main__':
+    app.run(debug=True)

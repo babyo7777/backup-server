@@ -1,8 +1,10 @@
 from flask import Flask, send_file, request
 from pytube import YouTube
+from flask_cors import CORS
 import os
 
 app = Flask(__name__)
+CORS(app)
 
 
 def download_video(video_id):
@@ -13,14 +15,14 @@ def download_video(video_id):
         return file_path
     else:
         yt = YouTube(f'https://www.youtube.com/watch?v={video_id}')
-        audio_stream = yt.streams.get_audio_only().download(
+        audio_stream = yt.streams.filter(only_audio=True).first().download(
             output_path="music/", filename=f"{video_id}.mp3")
         return file_path
 
 
-@app.route('/s')
+@app.route('/')
 def stream_audio():
-    video_id = request.args.get('id')
+    video_id = request.args.get('url')
     if video_id:
         audio_file_path = download_video(video_id)
         return send_file(audio_file_path, as_attachment=False)

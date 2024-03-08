@@ -20,8 +20,9 @@ def stream_audio():
             try:
                 yt = YouTube("https://www.youtube.com/watch?v="+str(video_id))
                 audio_stream = yt.streams.filter(only_audio=True).first()
-                audio_stream.download(
-                    output_path="music/", filename=video_id+".mp3")
+                out_file = audio_stream.download('music')
+                new_file = video_id + '.mp3'
+                os.rename(out_file, 'music/'+new_file)
                 return send_file(file_path, as_attachment=False)
             except Exception as e:
                 return str(e)
